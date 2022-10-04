@@ -1,6 +1,7 @@
 from sqlalchemy import Integer, ForeignKey
 from sqlalchemy.orm import relationship
 from flask_sqlalchemy import SQLAlchemy
+import json
 
 from settings import app
 
@@ -18,7 +19,7 @@ class Employee(db.Model):
     department = db.relationship('Department', foreign_keys=[id_department])
 
     def json(self):
-        return {'id': self.id, 'name': self.name, 'id_department': self.id_department}
+        return json.dumps({'id': self.id, 'name': self.name, 'id_department': self.id_department})
 
     @staticmethod
     def add_employee(_name, _id_department):
@@ -52,7 +53,7 @@ class Department(db.Model):
     Unit = relationship('Unit', foreign_keys=[id_unit])
 
     def json(self):
-        return {'id': self.id, 'id_unit': self.id_unit}
+        return json.dumps({'id': self.id, 'id_unit': self.id_unit})
 
     @staticmethod
     def add_department(_id_unit):
@@ -82,7 +83,7 @@ class Unit(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     def json(self):
-        return {'id': self.id, 'id_unit': self.id_unit}
+        return json.dumps({'id': self.id, 'id_unit': self.id_unit})
 
     @staticmethod
     def add_unit():
