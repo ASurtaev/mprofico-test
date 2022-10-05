@@ -1,12 +1,9 @@
 from sqlalchemy import Integer, ForeignKey
 from sqlalchemy.orm import relationship
-from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
 import json
 
-from settings import app
-
-
-db = SQLAlchemy(app)
+from . import db
 
 
 class Employee(db.Model):
@@ -15,8 +12,6 @@ class Employee(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
     id_department = db.Column(db.Integer, db.ForeignKey('department.id'))
-
-    department = db.relationship('Department', foreign_keys=[id_department])
 
     def json(self):
         return json.dumps({'id': self.id, 'name': self.name, 'id_department': self.id_department})
@@ -48,9 +43,9 @@ class Department(db.Model):
     __tablename__ = 'department'
 
     id = db.Column(db.Integer, primary_key=True)
-    id_unit = db.Column('id_unit', Integer, ForeignKey('Units.id_unit'))
+    id_unit = db.Column('id_unit', Integer, ForeignKey('unit.id'))
 
-    Unit = relationship('Unit', foreign_keys=[id_unit])
+    employee = db.relationship('Employee')
 
     def json(self):
         return json.dumps({'id': self.id, 'id_unit': self.id_unit})
@@ -63,7 +58,8 @@ class Department(db.Model):
 
     @staticmethod
     def get_department(_id):
-        return Department.json(Department.query.filter_by(id=_id).first())
+        dep = Department.query.filter_by(id=_id).first()
+        return Department.json(dep)
 
     @staticmethod
     def update_department(_id, _id_unit):
@@ -82,8 +78,10 @@ class Unit(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
+    department = relationship('Department')
+
     def json(self):
-        return json.dumps({'id': self.id, 'id_unit': self.id_unit})
+        return json.dumps({'id': self.id})
 
     @staticmethod
     def add_unit():
@@ -103,3 +101,26 @@ class Unit(db.Model):
     def delete_unit(_id):
         Unit.query.filter_by(id=_id).delete()
         db.session.commit()
+
+
+class User(UserMixin, db.Model):
+    __tablename__ = 'user'
+
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String, nullable=False, unique=True)
+    name = db.Column(db.String, nullable=False)
+    password = db.Column(db.String, nullable=False)
+
+    @staticmethod
+    def add_user(_email, _name, _password):
+        new_user = User(email=_email, name=_name, password=_password)
+        db.session.add(new_user)
+        db.session.commit()
+
+    @staticmethod
+    def get_user_by_email(_email):
+        return User.query.filter_by(email=_email).first()
+
+    @staticmethod
+    def get_user_by_id(_id):
+        return User.query.get(_id)
