@@ -3,8 +3,7 @@ from sqlalchemy.orm import relationship
 from flask_login import UserMixin
 import json
 
-from . import db
-
+from init import db
 
 class Employee(db.Model):
     __tablename__ = 'employee'
@@ -27,6 +26,17 @@ class Employee(db.Model):
         return Employee.json(Employee.query.filter_by(id=_id).first())
 
     @staticmethod
+    def get_all_employees(department=None, unit=None):
+        if department:
+            employee_list = Employee.query.filter_by(id_department=department)
+        elif unit:
+            departments = db.session.query(Department.id).filter_by(id_unit=unit)
+            employee_list = Employee.query.filter(Employee.id_department.in_(departments))
+        else:
+            employee_list = Employee.query.all()
+        return [Employee.json(employee) for employee in employee_list]
+
+    @staticmethod
     def update_employee(_id, _name, _id_department):
         employee_to_update = Employee.query.filter_by(id=_id).first()
         employee_to_update.name = _name
@@ -39,6 +49,7 @@ class Employee(db.Model):
         db.session.commit()
 
 
+# TODO: Сделать по отдельному файлу на каждую модель в папке models.
 class Department(db.Model):
     __tablename__ = 'department'
 
@@ -60,6 +71,14 @@ class Department(db.Model):
     def get_department(_id):
         dep = Department.query.filter_by(id=_id).first()
         return Department.json(dep)
+
+    @staticmethod
+    def get_all_departments(unit=None):
+        if unit:
+            department_list = Department.query.filter_by(id_unit=unit)
+        else:
+            department_list = Department.query.all()
+        return [Department.json(department) for department in department_list]
 
     @staticmethod
     def update_department(_id, _id_unit):
@@ -92,6 +111,10 @@ class Unit(db.Model):
     @staticmethod
     def get_unit(_id):
         return Unit.json(Unit.query.filter_by(id=_id).first())
+
+    @staticmethod
+    def get_all_units():
+        return [Unit.json(unit) for unit in Unit.query.all()]
 
     @staticmethod
     def update_unit(_id):
